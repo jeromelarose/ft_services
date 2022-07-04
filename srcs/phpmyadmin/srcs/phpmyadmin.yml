@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin
+  labels:
+    app: phpmyadmin
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.17.0.7
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: phpmyadmin
+    tier: frontend
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  labels:
+    app: phpmyadmin
+spec:
+  selector:
+    matchLabels:
+      app: phpmyadmin
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+        tier: frontend
+    spec:
+      containers:
+      - image: jelarose/phpmyadmin
+        name: phpmyadmin
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PMA_HOST
+          value: mysql
+        - name: PMA_PORT
+          value: "3306"
+        - name: PMA_USER
+          value: root
+        - name: MYSQL_ROOT_PASSWORD
+          value: pass
+        ports:
+        - containerPort: 5000
+          name: phpmyadmin

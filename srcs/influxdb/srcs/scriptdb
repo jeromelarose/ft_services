@@ -1,0 +1,3 @@
+CREATE DATABASE influx;
+CREATE USER jelarose WITH PASSWORD 'pass';
+GRANT ALL ON influx TO jelarose;

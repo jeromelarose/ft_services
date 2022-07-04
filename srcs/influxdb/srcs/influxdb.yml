@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  labels:
+    app: wordpress
+spec:
+  ports:
+  - port: 8086
+  selector:
+    app: influxdb
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: influxdb-pv-claim
+  labels:
+    app: influxdb
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: influxdb
+spec:
+  selector:
+    matchLabels:
+      app: influxdb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      containers:
+      - image: jelarose/influxdb
+        name: influxdb
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8086
+          name: influxdb
+        volumeMounts:
+        - name: influxdb-persistent-storage
+          mountPath: /var/lib/influxdb
+        - name: dockersock
+          mountPath: "/var/run/docker.sock"
+      volumes:
+      - name: influxdb-persistent-storage
+        persistentVolumeClaim:
+          claimName: influxdb-pv-claim
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
